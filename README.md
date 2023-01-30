@@ -1,4 +1,4 @@
-#ScrollScroll
+# ScrollScroll
 
 ScrollScroll is a scrolling text generator for FlipFlip. It generages fast moving text from one, two, or three lines of code.
 ## Usage
