@@ -79,7 +79,7 @@ textarea{
                     </nav>
                     <br/>
                     <div class="tab-content" id="nav-tabContent">
-                        <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab">
+                        <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab" name="tab0">
                     </br>
                     <!-- LINE 1 -->
                     <form id="scroll[TAB]" class="scrolltext">
@@ -149,9 +149,9 @@ textarea{
                     </form>
                     <!-- /LINE 1 -->
                         </div>
-                        <div class="tab-pane fade" id="nav-profile" role="tabpanel" aria-labelledby="nav-profile-tab">
+                        <div class="tab-pane fade" id="nav-profile" role="tabpanel" aria-labelledby="nav-profile-tab" name="tab1">
                         </div>
-                        <div class="tab-pane fade" id="nav-contact" role="tabpanel" aria-labelledby="nav-contact-tab">
+                        <div class="tab-pane fade" id="nav-contact" role="tabpanel" aria-labelledby="nav-contact-tab" name="tab2">
                         </div>
                         <div class="tab-pane fade" id="nav-preview" role="tabpanel" aria-labelledby="nav-preview-tab">
                             <div id='preview'>
@@ -462,114 +462,171 @@ textarea{
         <!-- Latest compiled and minified JavaScript -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
 <script>
-    $(document).ready(function() {
-        devmode=1;
-        //INIT
-        $("#nav-home").clone().appendTo("#nav-profile");
-        $("#nav-home").clone().appendTo("#nav-contact");
-        $('#nav-home').html(function (i, html) {
-            return html.replaceAll("[TAB]", '1')
-        });
-        $('#nav-profile').html(function (i, html) {
-            return html.replaceAll("[TAB]", '2')
-        });
-        $('#nav-contact').html(function (i, html) {
-            return html.replaceAll("[TAB]", '3')
-        });
-        $(".speedlabel").text("Speed = "+$("#previewSpeed").val()+" ms")
+function setCookie(c_name, value) {
+    var exdate = new Date();
+    exdate.setDate(exdate.getDate() + 99999);
+    var c_value = escape(value)+ "; expires=" + exdate.toUTCString();
+    document.cookie = c_name + "=" + c_value;
+}
+function getCookie(c_name) {
+    var c_value = document.cookie;
+    var c_start = c_value.indexOf(" " + c_name + "=");
+    if (c_start == -1) {
+        c_start = c_value.indexOf(c_name + "=");
+    }
+    if (c_start == -1) {
+        c_value = null;
+    } else {
+        c_start = c_value.indexOf("=", c_start) + 1;
+        var c_end = c_value.indexOf(";", c_start);
+        if (c_end == -1) {
+            c_end = c_value.length;
+        }
+        c_value = unescape(c_value.substring(c_start, c_end));
+    }
+    return c_value;
+}
+function setValue(input) {
+    var id = input.attr('id');
+    if(input.attr("type")=="radio"){//}||input.attr("type")=="checkbox"){
+        var value=(input.attr("checked")==undefined)?false:"checked";
+        //            console.log(input,value);
+    }else{
+        var value = input.val();
+    }
+    //    console.log("SET "+id,value);
+    setCookie(id,value);
+}
+function getValue(input) {
+    var id = input.attr('id');
+    var value = getCookie(id);
+    //    console.log("GET "+id,value);
+    if(value != null && value != "" ) {
+        if(input.attr("type")=="radio"){//}||input.attr("type")=="checkbox"){
+            console.log(input.attr('id'),value);
+            console.log(input);
+            if(value=="checked")
+                input.attr("checked","checked");
+        }else{
+            input.val(value);
+        }
+        return value;
+    }
+}
+$(document).ready(function() {
+    devmode=0;
+    //INIT
+    $("#nav-home").clone().appendTo("#nav-profile");
+    $("#nav-home").clone().appendTo("#nav-contact");
+    $('#nav-home').html(function (i, html) {
+        return html.replaceAll("[TAB]", '1')
+    });
+    $('#nav-profile').html(function (i, html) {
+        return html.replaceAll("[TAB]", '2')
+    });
+    $('#nav-contact').html(function (i, html) {
+        return html.replaceAll("[TAB]", '3')
+    });
+    $(".speedlabel").text("Speed = "+$("#previewSpeed").val()+" ms")
 
-        //FUNCTIONS
-        $("form").submit(function(e){
-            e.preventDefault();
+    //FUNCTIONS
+    $("form").submit(function(e){
+        e.preventDefault();
+    });
+    if(devmode){
+        $("#textToScroll1").attr("value","abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
+    }
+    tablines=[];
+    rawinput=[];
+    rowstats=[];
+    for(i=0;i<3;i++){
+        taboutputs=$("#scroll"+i+" input").each(function(){
+            getValue($(this));
         });
-        if(devmode){
-            $("#textToScroll1").attr("value","abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
+    }
+
+    function Stat(row,length,direction){
+        this.row=row;
+        this.length=length;
+        this.direction=direction;
+        this.output=function(){
+            return "Row "+this.row+":\n-----\nLength: "+this.length+"\nDirection:"+this.direction;
+        };
+    }
+    function generateStat(i){
+        if(typeof rowstats[i] === 'undefined'){
+            return false;
+        }else{
+            return rowstats[i].output()
         }
-        tablines=[];
-        rawinput=[];
-        rowstats=[];
-        function Stat(row,length,direction){
-            this.row=row;
-            this.length=length;
-            this.direction=direction;
-            this.output=function(){
-                return "Row "+this.row+":\n-----\nLength: "+this.length+"\nDirection:"+this.direction;
-            };
-        }
-        function generateStat(i){
-            if(typeof rowstats[i] === 'undefined'){
-                return false;
+    }
+    function generateStats(){
+        outp="";
+        for(i=0;i<3;i++){
+            curStat=generateStat(i);
+            if(!curStat){
+                outp+="Row "+(i+1)+" is empty";
             }else{
-                return rowstats[i].output()
+                outp+=rowstats[i].output()
             }
+            if(i!=2) outp+="\n\n";
         }
-        function generateStats(){
-            outp="";
-            for(i=0;i<3;i++){
-                curStat=generateStat(i);
-                if(!curStat){
-                    outp+="Row "+(i+1)+" is empty";
-                }else{
-                    outp+=rowstats[i].output()
-                }
-                if(i!=2) outp+="\n\n";
-            }
-            return outp;
+        return outp;
 
-        }
-        function previewBar(v){
-            percent=(v/highest.length)*100;
-            $(".progress-bar").css("width",percent+"%")
-        }
+    }
+    function previewBar(v){
+        percent=(v/highest.length)*100;
+        $(".progress-bar").css("width",percent+"%")
+    }
 
-        function previewStep(v){
-            if(v<0){
-                v=highest.length-1;
-                previewstep=v;
-            }else if(v>=highest.length){
-                v=0;
-                previewstep=1;
-            }
-            prevOutput="";
-            end=["</br>","</br>",""];
-            for(i=0;i<3;i++){
-                rw=(typeof rowoutput[i][v] === 'undefined')?"":rowoutput[i][v]
-                prevOutput+=rw+end[i];
-            }
-            $("#previewText").html( prevOutput);
-            $(".progress-bar").text(v+"/"+highest.length);
-            previewBar(v);
-
+    function previewStep(v){
+        if(v<0){
+            v=highest.length-1;
+            previewstep=v;
+        }else if(v>=highest.length){
+            v=0;
+            previewstep=1;
         }
-        previewstep=0;
-        $(".progress").click(function(event){
-            relX = event.pageX - $(this).offset().left;
-            totalX = $(this).width();
-            percentX=(relX/totalX)*100;
-            frame=Math.floor((highest.length*percentX)/100);
-            //console.log(relX,totalX,percentX,highest.length);
-            //console.log(frame);
-            previewstep=frame;
-            previewStep(frame);
-        });
-        $("#step").click(function(){
-            previewstep++;
-            previewStep(previewstep);
-        })
-        $("#step-").click(function(){
-            previewstep--;
-            previewStep(previewstep);
-        })
-        playing=false;
-        prev=false;
-        prevspeed=$("#previewSpeed").val();
-        $("#play").click(function(){
-            $(".btn-pause").toggle();
-            $(".btn-play").toggle();
-            playing=!playing;
-            prev=previewPlay(playing,prev,prevspeed);
-        })
-$('#previewSpeed').on('input', function () {
+        prevOutput="";
+        end=["</br>","</br>",""];
+        for(i=0;i<3;i++){
+            rw=(typeof rowoutput[i][v] === 'undefined')?"":rowoutput[i][v]
+            prevOutput+=rw+end[i];
+        }
+        $("#previewText").html( prevOutput);
+        $(".progress-bar").text(v+"/"+highest.length);
+        previewBar(v);
+
+    }
+    previewstep=0;
+    $(".progress").click(function(event){
+        relX = event.pageX - $(this).offset().left;
+        totalX = $(this).width();
+        percentX=(relX/totalX)*100;
+        frame=Math.floor((highest.length*percentX)/100);
+        //console.log(relX,totalX,percentX,highest.length);
+        //console.log(frame);
+        previewstep=frame;
+        previewStep(frame);
+    });
+    $("#step").click(function(){
+        previewstep++;
+        previewStep(previewstep);
+    })
+    $("#step-").click(function(){
+        previewstep--;
+        previewStep(previewstep);
+    })
+    playing=false;
+    prev=false;
+    prevspeed=$("#previewSpeed").val();
+    $("#play").click(function(){
+        $(".btn-pause").toggle();
+        $(".btn-play").toggle();
+        playing=!playing;
+        prev=previewPlay(playing,prev,prevspeed);
+    })
+    $('#previewSpeed').on('input', function () {
         prevspeed=$(this).val();
         if(playing){
             //restart
@@ -579,168 +636,173 @@ $('#previewSpeed').on('input', function () {
 
         $(".speedlabel").text("Speed = "+prevspeed+" ms")
         console.log(prevspeed);
-});
-        function previewPlay(playing,prev,speed){
-            if(playing){
-                return setInterval(
-                    function(){   
-                        previewstep++;
-                        previewStep(previewstep);
-                    },
-                    speed  
-                );
-            }else{
-                clearInterval(prev);
-                return false;
-            }
+    });
+    function previewPlay(playing,prev,speed){
+        if(playing){
+            return setInterval(
+                function(){
+                    previewstep++;
+                    previewStep(previewstep);
+                },
+                speed
+            );
+        }else{
+            clearInterval(prev);
+            return false;
         }
-        function snakeCheck(){
-            snakecheck=($("#snakecheck").attr("checked"))=="checked"?1:0;
-            if(snakecheck==1){
-                $("#check").hide();
-                $("#radio").show();
-            }else{
-                $("#check").show();
-                $("#radio").hide();
-            }
-            return snakecheck;
-
+    }
+    function snakeCheck(){
+        snakecheck=($("#snakecheck").attr("checked"))=="checked"?1:0;
+        if(snakecheck==1){
+            $("#check").hide();
+            $("#radio").show();
+        }else{
+            $("#check").show();
+            $("#radio").hide();
         }
-        snakecheck=snakeCheck();
+        return snakecheck;
 
-        $("#snakecheck").click(function(){
-            snakeCheck();
-        });
+    }
+    snakecheck=snakeCheck();
+
+    $("#snakecheck").click(function(){
+        snakeCheck();
+    });
 
 
-        $(".submitButton").click(function(e){
-            Submit:{
-                // global
-                chars=$("#characters").val();
-                // tab
-                stats="";
-                tab=$(this).attr("group");
-                output=$("#textToScroll"+tab).val();
-                rawinput[tab-1]=output;
-                length=output.length;
-                if(length==0){
-                    product=("ENTER TEXT TO SCROLL");
-                    stats=product;
-                    break Submit;
-                }
-                lines=[];
-                direction=$("[name=direction"+tab+"]:checked").attr("id")
-                product="";
+    $(".submitButton").click(function(e){
+        Submit:{
+            // global
+            chars=$("#characters").val();
+            // tab
+            stats="";
+            tab=$(this).attr("group");
+            output=$("#textToScroll"+tab).val();
+            rawinput[tab-1]=output;
+            length=output.length;
 
-                for(i=0;i<length;i++){
-                    if(direction=="left"){
-                        start=output.substr(i);
-                        end=output.substring(i,0);
-                    }else{
-                        start=output.substring(output.length-i);
-                        end=output.substring(output.length-i,0);
-                    }
-                    line=start+end;
-                    lines.push(line);
-                    trunc=line.substring(chars,0);
-                    product+=trunc+"\n";
-                }
-                tablines[tab-1]=lines;
-                //stats="Row "+tab+": \n"+length+" lines \nscrolling "+direction
-                const tabstat = new Stat(tab,length,direction); 
-                rowstats[tab-1]=tabstat; 
-                //                $("#scriptstats").val(generateStats());
-                $("#scriptstats").val(generateStats());
-                stats=rowstats[tab-1].output()
-                $("#row"+tab).prop( "checked", true ); 
+            $("#scroll"+tab+" input").each(function(){
+                //            console.log($(this));
+                setValue($(this));
+            });
+            if(length==0){
+                product=("ENTER TEXT TO SCROLL");
+                stats=product;
+                break Submit;
             }
-            $("#output"+tab).val(product);
-            $("#stats"+tab).val(stats);
-        });
-        $("#generate").click(function(e){
-            Generate:{
-                outstart=$("#scriptsettings").val()+"\n";
-                delimit=" "+$("#delimit").val();
-                linestart=$("#linecommand").val();
-                //                outstart="setCaptionDuration 20\nsetCaptionDelay 0\n";
-                chars=$("#characters").val();
-                scriptOutput=""
-                rowoutput=[[],[],[]];
-                checkbox=[ $('#row1').is(':checked'),
-                    $('#row2').is(':checked'),
-                    $('#row3').is(':checked') ];
-                if(snakecheck){
-                    scriptOutput="";
-                    selection=$('input[name="radrows"]:checked').attr("id").substring(3)-1;
-                    if(typeof rawinput[selection] === 'undefined'){
-                        scriptOutput+="\nSELECTION "+selection+" IS EMPTY!";
+            lines=[];
+            direction=$("[name=direction"+tab+"]:checked").attr("id")
+            product="";
+
+            for(i=0;i<length;i++){
+                if(direction=="left"){
+                    start=output.substr(i);
+                    end=output.substring(i,0);
+                }else{
+                    start=output.substring(output.length-i);
+                    end=output.substring(output.length-i,0);
+                }
+                line=start+end;
+                lines.push(line);
+                trunc=line.substring(chars,0);
+                product+=trunc+"\n";
+            }
+            tablines[tab-1]=lines;
+            //stats="Row "+tab+": \n"+length+" lines \nscrolling "+direction
+            const tabstat = new Stat(tab,length,direction);
+            rowstats[tab-1]=tabstat;
+            //                $("#scriptstats").val(generateStats());
+            $("#scriptstats").val(generateStats());
+            stats=rowstats[tab-1].output()
+            $("#row"+tab).prop( "checked", true );
+        }
+        $("#output"+tab).val(product);
+        $("#stats"+tab).val(stats);
+    });
+    $("#generate").click(function(e){
+        Generate:{
+            outstart=$("#scriptsettings").val()+"\n";
+            delimit=" "+$("#delimit").val();
+            linestart=$("#linecommand").val();
+            //                outstart="setCaptionDuration 20\nsetCaptionDelay 0\n";
+            chars=$("#characters").val();
+            scriptOutput=""
+            rowoutput=[[],[],[]];
+            checkbox=[ $('#row1').is(':checked'),
+                $('#row2').is(':checked'),
+                $('#row3').is(':checked') ];
+            if(snakecheck){
+                scriptOutput="";
+                selection=$('input[name="radrows"]:checked').attr("id").substring(3)-1;
+                if(typeof rawinput[selection] === 'undefined'){
+                    scriptOutput+="\nSELECTION "+selection+" IS EMPTY!";
+                    break Generate;
+                }
+                input=rawinput[selection];
+                highest=input;
+                rowcount=input.length;
+                input=input+input;
+                chars=parseInt(chars);
+                out=outstart;
+                for(i=0;i<rowcount;i++){
+                    btemp=input.substring(chars+i,chars*2+i);
+                    btemp=btemp.split("").reverse().join("");
+                    rowoutput[0][i]=input.substring(i,chars+i);
+                    rowoutput[1][i]=btemp;
+                    rowoutput[2][i]=input.substring(chars*2+i,chars*3+i);
+                    out+=linestart+" "+rowoutput[0][i]+delimit+rowoutput[1][i]+delimit+rowoutput[2][i]+"\n";
+                }
+                //                        scriptOutput+="\n"+rowA[0]+"\n"+rowB[0]+"\n"+rowC[0];
+                scriptOutput+=out;
+                break Generate;
+            }
+            if(!(checkbox[0]||checkbox[1]||checkbox[2])){
+                scriptOutput="No Rows Selected";
+                break Generate;
+            }
+            highest=0;
+            rowstodo=[];
+            rowcount=0;
+            out=outstart;
+            for(i=0;i<3;i++){
+                if(checkbox[i]){
+                    if(!generateStat(i)){
+                        scriptOutput="row "+(i+1)+" is selected but is empty";
                         break Generate;
                     }
-                    input=rawinput[selection];
-                    highest=input;
-                    rowcount=input.length;
-                    input=input+input;
-                    chars=parseInt(chars);
-                    out=outstart;
-                    for(i=0;i<rowcount;i++){
-                        btemp=input.substring(chars+i,chars*2+i);
-                        btemp=btemp.split("").reverse().join("");
-                        rowoutput[0][i]=input.substring(i,chars+i);
-                        rowoutput[1][i]=btemp;
-                        rowoutput[2][i]=input.substring(chars*2+i,chars*3+i);
-                        out+=linestart+" "+rowoutput[0][i]+delimit+rowoutput[1][i]+delimit+rowoutput[2][i]+"\n";
+                    if(highest==0||rowstats[i].length>highest.length){
+                        highest=rowstats[i];
                     }
-                    //                        scriptOutput+="\n"+rowA[0]+"\n"+rowB[0]+"\n"+rowC[0];
-                    scriptOutput+=out;
-                    break Generate;
+                    rowstodo[rowcount]=tablines[i];
+                    rowcount++
                 }
-                if(!(checkbox[0]||checkbox[1]||checkbox[2])){
-                    scriptOutput="No Rows Selected";
-                    break Generate;
-                }
-                highest=0;
-                rowstodo=[];
-                rowcount=0;
-                out=outstart;
-                for(i=0;i<3;i++){
-                    if(checkbox[i]){
-                        if(!generateStat(i)){
-                            scriptOutput="row "+(i+1)+" is selected but is empty";
-                            break Generate;
-                        }
-                        if(highest==0||rowstats[i].length>highest.length){
-                            highest=rowstats[i];
-                        }
-                        rowstodo[rowcount]=tablines[i];
-                        rowcount++
-                    }
 
-                }
-                for(i=0;i<highest.length;i++){
-                    out+=linestart+" ";
-                    for(x=0;x<rowstodo.length;x++){
-                        if(typeof rowstodo[x][i] === 'undefined'){
-                            out+="";
-                        }else{
-                            out+=rowstodo[x][i].substring(chars,0);
-                            rowoutput[x][i]=rowstodo[x][i].substring(chars,0);
-                        }
-                        if(x+1==rowstodo.length){
-                            out+="\n"
-                        }else{
-                            out+=delimit;
-                        }
+            }
+            for(i=0;i<highest.length;i++){
+                out+=linestart+" ";
+                for(x=0;x<rowstodo.length;x++){
+                    if(typeof rowstodo[x][i] === 'undefined'){
+                        out+="";
+                    }else{
+                        out+=rowstodo[x][i].substring(chars,0);
+                        rowoutput[x][i]=rowstodo[x][i].substring(chars,0);
                     }
+                    if(x+1==rowstodo.length){
+                        out+="\n"
+                    }else{
+                        out+=delimit;
+                    }
+                }
 
 
-                }
-                scriptOutput=out;
-            }                
-            previewstep=0;
-            previewStep(0);
-            $("#scriptoutput").val(scriptOutput);
-        });
+            }
+            scriptOutput=out;
+        }
+        previewstep=0;
+        previewStep(0);
+        $("#scriptoutput").val(scriptOutput);
     });
+});
 </script>
     </body>
 </html>
