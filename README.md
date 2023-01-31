@@ -9,5 +9,5 @@ You can download the index.html file and run it locally or [use it online](https
 -   Add 0.5x and 2x speeds
 -   Add Bouncing as a scroll option
 -   Compensate for rows of different lengths
--   Add a preview window
+-   ~~Add a preview window~~
 -   Save settings and texts with cookies
